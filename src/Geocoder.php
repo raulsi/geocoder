@@ -70,13 +70,13 @@ class Geocoder
         return $this;
     }
 
-    public function getCoordinatesForAddress(string $address): array
+    public function getCoordinatesForAddress(string $address, string $postalCode = null): array
     {
-        if (empty($address)) {
-            return $this->emptyResponse();
-        }
+        // if (empty($address)) {
+        //     return $this->emptyResponse();
+        // }
 
-        $payload = $this->getRequestPayload(compact('address'));
+        $payload = $this->getRequestPayload(['address' => $address, 'postal_code' => $postalCode]);
 
         $response = $this->client->request('GET', $this->endpoint, $payload);
 
@@ -144,12 +144,17 @@ class Geocoder
             'bounds' => $this->bounds,
         ], $parameters);
 
-        if ($this->country) {
-            $parameters = array_merge(
-                $parameters,
-                ['components' => 'country:'.$this->country]
-            );
+        if ($parameters['postal_code']) {
+            $component = 'postal_code:'.$parameters['postal_code'];
         }
+        else if ($this->country) {
+            $component = 'country:'.$this->country;
+        }
+
+        $parameters = array_merge(
+            $parameters,
+            ['components' => trim($component, "|")]
+        );
 
         return ['query' => $parameters];
     }
